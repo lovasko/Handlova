@@ -56,13 +56,13 @@ void save (T tuple)
 	if (count == 0)
 	{
 		std::list<int> l;
-		l.push_back(db::current());
+		l.push_back(db::values.size() - 1);
 		db::index_bucket[idx][h] = l;
 	}
 	
 	if (count == 1)
 	{
-		db::index_bucket[idx][h].push_back(db::current());
+		db::index_bucket[idx][h].push_back(db::values.size() - 1);
 	}
 };
 
@@ -123,21 +123,6 @@ struct people_db
 	 */
 	static std::vector<value_type> values;
 
-	/* Helper variable to track count of inserted tuples. */
-	static int n; 
-
-	/* Currect amount of inserted tuples. */
-	static int current() 
-	{ 
-		return n;
-	}
-
-	/* Called after new tuple was inserted. */
-	static void advance()
-	{
-		n++;
-	}
-
 	static void insert(value_type value)
 	{
 		values.push_back(value);
@@ -145,8 +130,6 @@ struct people_db
 		save<people_db, value_type, 0>(value);
 		save<people_db, value_type, 1>(value);
 		save<people_db, value_type, 2>(value);
-
-		advance();
 	}
 };
 
@@ -154,7 +137,6 @@ struct people_db
 size_t people_db::tuple_size = std::tuple_size<people_db::value_type>::value;
 std::vector<bucket> people_db::index_bucket(people_db::tuple_size);
 std::vector<people_db::value_type> people_db::values;
-int people_db::n = 0;
 
 /* 
  * The find function.

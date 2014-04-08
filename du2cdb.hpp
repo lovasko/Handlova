@@ -11,8 +11,16 @@
 #include <functional>
 #include <string>
 
+/*
+ * Mapping between a hash (represented as size_t) and a list of indexes to the
+ * values field of the database.
+ */
 typedef std::map<size_t, std::list<int>> bucket;
 
+/*
+ * Random complex data structure to provide an example how the hashing should
+ * be implemented. No actual fields are used.
+ */
 struct birth_date
 {
 	int year;
@@ -21,6 +29,11 @@ struct birth_date
 	bool afternoon;
 };
 
+/* 
+ * DISCLAIMER: I am not the author of this function, somebody in the Boost
+ * library is. I just found it in the source it, since there is no std:: method
+ * to provide this functionality.
+ */
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)
 {
@@ -28,6 +41,10 @@ inline void hash_combine(std::size_t& seed, const T& v)
 	seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
 }
 
+/*
+ * Extract the idx-th value of the tuple and save it to the corresponding
+ * bucket. In case that there is no such bucket, it is created.
+ */
 template<class db, class T, size_t idx>
 void save (T tuple)
 {
@@ -51,6 +68,11 @@ void save (T tuple)
 
 namespace std 
 {
+	/*
+	 * As encouraged by the standard library, specialized the std::hash struct to
+	 * provide the hashing functionality for our complex structure. This approach
+	 * might not be the ideal one, but it provides a nice generic example.
+	 */
 	template <> struct hash<struct birth_date>
 	{
 		size_t operator()(const struct birth_date& x) const
@@ -69,6 +91,9 @@ struct people_db
 {
 	typedef std::tuple<std::string, struct birth_date, int> value_type;
 
+	/*
+	 * Debugging output helper.
+	 */
 	static void value_type_print (value_type& vt)
 	{
 		std::cout << "(" 
@@ -86,16 +111,28 @@ struct people_db
 			<< ")";
 	}
 
+	/* Number of the tuple elements. */
 	static size_t tuple_size;
+
+	/* Bucket for each index. Indexed with the array index. */
 	static std::vector<bucket> index_bucket;
+
+	/* 
+	 * Place where the whole tuples are saved. The buckets save indices to this
+	 * vector for further access (and also to prevent data duplication) 
+	 */
 	static std::vector<value_type> values;
+
+	/* Helper variable to track count of inserted tuples. */
 	static int n; 
 
+	/* Currect amount of inserted tuples. */
 	static int current() 
 	{ 
 		return n;
 	}
 
+	/* Called after new tuple was inserted. */
 	static void advance()
 	{
 		n++;
@@ -113,12 +150,24 @@ struct people_db
 	}
 };
 
+/* Initialization of static variables. */
 size_t people_db::tuple_size = std::tuple_size<people_db::value_type>::value;
 std::vector<bucket> people_db::index_bucket(people_db::tuple_size);
 std::vector<people_db::value_type> people_db::values;
 int people_db::n = 0;
 
-
+/* 
+ * The find function.
+ * 
+ * Creates a hash of the key and looks for the hashed key in the appropriate
+ * index bucket. Now the function takes the located list of indices to the
+ * values array and needs to check not only the hash, but also the actual
+ * values stored (since the hash function contains collisions). A nice
+ * optimization takes place, when we found already two (simply more than just
+ * one) same data pieces - we stop the search, since there is no need to search
+ * the list till the end, we already know that the data is duplicated and we
+ * can throw an exception.
+ */
 template <class db, int idx>
 const typename db::value_type &find(
 const typename std::tuple_element<idx, typename db::value_type>::type &key)

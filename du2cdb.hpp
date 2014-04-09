@@ -15,6 +15,19 @@
 #include <string>
 
 /*
+ * ALGORITHM EXPLANATION
+ *
+ * Insert: Save the whole tuple to a values array and remember the index of it.
+ * For each element of the tuple: hash it, insert the pair (hash, i-th element)
+ * to corresponding index bucket.
+ * 
+ * Find: Hash the key, look to the correct basket, find the right list with the
+ * hashed key, search the list for identical data (and track count of how many
+ * identities have we found) and in case that we found only one match, use the
+ * index stored in the list to the values array and fetch the whole tuple.
+ */
+
+/*
  * Mapping between a hash (represented as size_t) and a list of indexes to the
  * values field of the database.
  */

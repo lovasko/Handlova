@@ -1,3 +1,6 @@
+// DU2cdb.hpp
+// Daniel Lovasko NPRG051 2013/2014
+
 #include <stdio.h>
 #include <tuple>
 #include <utility>

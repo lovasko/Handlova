@@ -1,3 +1,6 @@
+// DU2cdb.cpp
+// Daniel Lovasko NPRG051 2013/2014
+
 #include "du2cdb.hpp"
 #include <stdlib.h>
 #include <ctype.h>
